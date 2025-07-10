@@ -61,7 +61,7 @@ from mcp.types import ResourceTemplate as MCPResourceTemplate
 from mcp.types import Tool as MCPTool
 
 # Import the new AgentProtocol
-from src.communication_protocol.agent_protocol import AgentProtocol, Message
+from ....communication_protocol.agent_protocol import AgentProtocol, Message
 
 logger = get_logger(__name__)
 
