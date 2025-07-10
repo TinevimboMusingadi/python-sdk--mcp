@@ -60,6 +60,9 @@ from mcp.types import Resource as MCPResource
 from mcp.types import ResourceTemplate as MCPResourceTemplate
 from mcp.types import Tool as MCPTool
 
+# Import the new AgentProtocol
+from src.communication_protocol.agent_protocol import AgentProtocol, Message
+
 logger = get_logger(__name__)
 
 
@@ -119,13 +122,19 @@ class Settings(BaseSettings, Generic[LifespanResultT]):
 
 
 def lifespan_wrapper(
-    app: FastMCP,
-    lifespan: Callable[[FastMCP], AbstractAsyncContextManager[LifespanResultT]],
+    app: "FastMCP",
+    lifespan: Callable[["FastMCP"], AbstractAsyncContextManager[LifespanResultT]],
 ) -> Callable[[MCPServer[LifespanResultT, Request]], AbstractAsyncContextManager[object]]:
     @asynccontextmanager
     async def wrap(s: MCPServer[LifespanResultT, Request]) -> AsyncIterator[object]:
-        async with lifespan(app) as context:
-            yield context
+        # Start the agent protocol runner when the server starts
+        app.agent_protocol.run()
+        try:
+            async with lifespan(app) as context:
+                yield context
+        finally:
+            # Stop the agent protocol runner when the server shuts down
+            app.agent_protocol.stop()
 
     return wrap
 
@@ -172,6 +181,9 @@ class FastMCP:
         self._custom_starlette_routes: list[Route] = []
         self.dependencies = self.settings.dependencies
         self._session_manager: StreamableHTTPSessionManager | None = None
+
+        # Instantiate the AgentProtocol
+        self.agent_protocol = AgentProtocol()
 
         # Set up MCP protocol handlers
         self._setup_handlers()
