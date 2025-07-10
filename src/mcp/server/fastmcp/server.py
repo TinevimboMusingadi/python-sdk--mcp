@@ -61,7 +61,7 @@ from mcp.types import ResourceTemplate as MCPResourceTemplate
 from mcp.types import Tool as MCPTool
 
 # Import the new AgentProtocol
-from ....communication_protocol.agent_protocol import AgentProtocol, Message
+from ....communication_protocol.agent_protocol import AgentProtocol
 
 logger = get_logger(__name__)
 
@@ -77,8 +77,6 @@ class Settings(BaseSettings, Generic[LifespanResultT]):
         env_prefix="FASTMCP_",
         env_file=".env",
         env_nested_delimiter="__",
-        nested_model_default_partial_update=True,
-        extra="ignore",
     )
 
     # Server settings
